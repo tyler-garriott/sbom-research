@@ -1,0 +1,9 @@
+{
+  "sample": "example",
+  "components": [
+    {
+      "name": "openssl",
+      "version": "3.0.13"
+    }
+  ]
+}
