@@ -19,6 +19,7 @@ This project compares:
 
 ## Repo Files
 
+- `samples/`: small C programs used to create test binaries
 - `data/ground-truth/example.json`: example expected components
 - `data/syft-output/`: place to save Syft output
 - `scripts/compare_sbom.py`: compares expected components with Syft output
