@@ -200,6 +200,13 @@ executable as `zstd` version `1.6.0`, type `binary`. However, Syft did not
 identify package artifacts for related executables with different names, the
 shared library, or the static archive.
 
+Compared to the other C binaries, `zstd` is the first case where Syft produced a
+package-level SBOM artifact from binary-only scanning. The difference is that
+Syft has a specific `zstd-binary` classifier. Other binaries, including
+Fastfetch, pgvector, FreeRTOS, and the small test programs, were treated as
+generic ELF files: Syft detected imported libraries but did not identify
+package-level SBOM artifacts.
+
 UP NEXT:
 jqlang/jq
 curl/curl

@@ -1,0 +1,12 @@
+name: sbom-research
+
+services:
+  research:
+    build:
+      context: .
+    image: sbom-research:latest
+    working_dir: /work
+    volumes:
+      - ..:/work
+    stdin_open: true
+    tty: true

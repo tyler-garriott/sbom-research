@@ -15,4 +15,3 @@ venv/
 # Local binary files used for experiments
 data/binaries/*
 !data/binaries/.gitkeep
-

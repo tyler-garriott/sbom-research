@@ -1,0 +1,18 @@
+{
+  "name": "SBOM Research",
+  "build": {
+    "dockerfile": "../docker/Dockerfile",
+    "context": "../docker"
+  },
+  "workspaceFolder": "/work",
+  "workspaceMount": "source=${localWorkspaceFolder},target=/work,type=bind",
+  "postCreateCommand": "syft version && codex --version && gcc --version && jq --version",
+  "customizations": {
+    "zed": {
+      "extensions": []
+    },
+    "vscode": {
+      "extensions": []
+    }
+  }
+}
