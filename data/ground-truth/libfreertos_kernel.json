@@ -1,0 +1,10 @@
+{
+  "sample": "libfreertos_kernel.a",
+  "components": [
+    {
+      "name": "freertos-kernel",
+      "version": "d877cd539"
+    }
+  ],
+  "imported_libraries": []
+}

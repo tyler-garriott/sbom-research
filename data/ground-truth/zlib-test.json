@@ -1,0 +1,12 @@
+{
+  "sample": "zlib-test",
+  "components": [
+    {
+      "name": "zlib"
+    }
+  ],
+  "imported_libraries": [
+    "libz.so.1",
+    "libc.so.6"
+  ]
+}

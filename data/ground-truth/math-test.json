@@ -1,0 +1,8 @@
+{
+  "sample": "math-test",
+  "components": [],
+  "imported_libraries": [
+    "libm.so.6",
+    "libc.so.6"
+  ]
+}

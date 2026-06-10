@@ -1,0 +1,12 @@
+{
+  "sample": "curl-test",
+  "components": [
+    {
+      "name": "curl"
+    }
+  ],
+  "imported_libraries": [
+    "libcurl.so.4",
+    "libc.so.6"
+  ]
+}

@@ -1,0 +1,10 @@
+{
+  "sample": "libzstd.a",
+  "components": [
+    {
+      "name": "zstd",
+      "version": "1.6.0"
+    }
+  ],
+  "imported_libraries": []
+}

@@ -1,0 +1,13 @@
+{
+  "sample": "fastfetch",
+  "components": [
+    {
+      "name": "fastfetch",
+      "version": "2.63.1-108"
+    }
+  ],
+  "imported_libraries": [
+    "libm.so.6",
+    "libc.so.6"
+  ]
+}

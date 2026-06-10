@@ -1,9 +1,8 @@
 {
-  "sample": "example",
+  "sample": "openssl-test",
   "components": [
     {
-      "name": "openssl",
-      "version": "3.0.13"
+      "name": "openssl"
     }
   ],
   "imported_libraries": [

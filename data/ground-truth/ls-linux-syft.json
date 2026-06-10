@@ -1,0 +1,12 @@
+{
+  "sample": "/bin/ls",
+  "components": [
+    {
+      "name": "coreutils"
+    }
+  ],
+  "imported_libraries": [
+    "libcap.so.2",
+    "libc.so.6"
+  ]
+}

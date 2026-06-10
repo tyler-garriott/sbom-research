@@ -1,0 +1,12 @@
+{
+  "sample": "sqlite-test",
+  "components": [
+    {
+      "name": "sqlite"
+    }
+  ],
+  "imported_libraries": [
+    "libsqlite3.so.0",
+    "libc.so.6"
+  ]
+}

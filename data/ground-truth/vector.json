@@ -1,0 +1,12 @@
+{
+  "sample": "vector.so",
+  "components": [
+    {
+      "name": "pgvector",
+      "version": "0.8.2"
+    }
+  ],
+  "imported_libraries": [
+    "libc.so.6"
+  ]
+}

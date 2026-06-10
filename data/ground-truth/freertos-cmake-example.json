@@ -1,0 +1,12 @@
+{
+  "sample": "freertos-cmake-example",
+  "components": [
+    {
+      "name": "freertos-kernel",
+      "version": "d877cd539"
+    }
+  ],
+  "imported_libraries": [
+    "libc.so.6"
+  ]
+}

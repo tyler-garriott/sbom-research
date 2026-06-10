@@ -22,7 +22,7 @@ This project compares:
 - `samples/`: small C programs used to create test binaries
 - `data/ground-truth/example.json`: example expected components
 - `data/syft-output/`: place to save Syft output
-- `scripts/compare_sbom.py`: compares expected components with Syft output
+- `scripts/compare_sbom.py`: compares expected package artifacts and ELF imports with Syft output
 - `docker/`: reproducible Linux environment for building and scanning binaries
 
 ## First Experiment
@@ -38,6 +38,10 @@ This project compares:
          "name": "openssl",
          "version": "3.0.13"
        }
+     ],
+     "imported_libraries": [
+       "libcrypto.so.3",
+       "libc.so.6"
      ]
    }
    ```
@@ -48,7 +52,7 @@ This project compares:
    syft ./path/to/binary -o syft-json > data/syft-output/example.syft.json
    ```
 
-4. Compare the expected components with Syft's output:
+4. Compare the expected package artifacts and imported libraries with Syft's output:
 
    ```sh
    python3 scripts/compare_sbom.py \
@@ -56,13 +60,40 @@ This project compares:
      data/syft-output/example.syft.json
    ```
 
+## Ground Truth Fields
+
+Ground-truth files separate two different questions:
+
+- `components`: package/component identities that you expect Syft to report
+  under `artifacts`. These are names like `zstd`, `openssl`, `pgvector`, or
+  `fastfetch`.
+- `imported_libraries`: ELF shared libraries that you expect Syft to report
+  under `files[].executable.importedLibraries`. These are names from
+  `readelf -d`, such as `libcrypto.so.3`, `libz.so.1`, or `libc.so.6`.
+
+Do not treat an imported library name as the same thing as a package artifact.
+For example, `openssl` is a package/component expectation, while
+`libcrypto.so.3` is binary dependency evidence.
+
 ## Accuracy Terms
 
-- true positive: Syft found a component that should be there
-- false positive: Syft reported a component that should not be there
-- false negative: Syft missed a component that should be there
-- precision: how many reported components were correct
-- recall: how many expected components were found
+The comparison script reports two separate measurements:
+
+- `package_artifacts`: whether Syft emitted expected SBOM package/component records under `artifacts`
+- `imported_libraries`: whether Syft extracted expected ELF `NEEDED` entries under `files[].executable.importedLibraries`
+
+For each measurement:
+
+- true positive: Syft found an item that should be there
+- false positive: Syft reported an item that should not be there
+- false negative: Syft missed an item that should be there
+- precision: how many reported items were correct
+- recall: how many expected items were found
+
+For package artifacts, precision and recall are based on component names.
+`version_accuracy` is reported separately when the ground truth includes
+expected versions. Package `exact_match` is false if a required version does not
+match.
 
 ## Docker Environment
 

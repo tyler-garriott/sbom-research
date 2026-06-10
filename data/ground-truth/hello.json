@@ -1,0 +1,7 @@
+{
+  "sample": "hello",
+  "components": [],
+  "imported_libraries": [
+    "libc.so.6"
+  ]
+}

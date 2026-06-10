@@ -1,0 +1,12 @@
+{
+  "sample": "zstdmt",
+  "components": [
+    {
+      "name": "zstd",
+      "version": "1.6.0"
+    }
+  ],
+  "imported_libraries": [
+    "libc.so.6"
+  ]
+}
