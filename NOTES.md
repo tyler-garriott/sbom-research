@@ -207,10 +207,153 @@ Fastfetch, pgvector, FreeRTOS, and the small test programs, were treated as
 generic ELF files: Syft detected imported libraries but did not identify
 package-level SBOM artifacts.
 
+## curl Result
+
+I cloned and built curl using CMake.
+
+Build commands used:
+
+```sh
+cmake -S data/binaries/curl -B data/binaries/curl/build-cmake \
+  -DCMAKE_BUILD_TYPE=Release \
+  -DBUILD_CURL_EXE=ON \
+  -DBUILD_EXAMPLES=OFF \
+  -DBUILD_TESTING=OFF \
+  -DBUILD_LIBCURL_DOCS=OFF \
+  -DBUILD_MISC_DOCS=OFF \
+  -DENABLE_CURL_MANUAL=OFF
+cmake --build data/binaries/curl/build-cmake --target curl --parallel
+```
+
+curl commit tested: `97aed9c960`.
+
+The built executable reports:
+
+```text
+curl 8.21.0-DEV (Linux) libcurl/8.21.0-DEV OpenSSL/3.6.3 zlib/1.3.1.zlib-ng brotli/1.2.0 zstd/1.5.7 libidn2/2.3.8 libpsl/0.21.5 libssh2/1.11.1 nghttp2/1.69.0 OpenLDAP/2.6.13
+```
+
+I copied the useful test artifacts into `data/binaries/curl-cmake/`:
+
+- `curl`
+- `libcurl.so.4.8.0`
+
+Syft results:
+
+| Artifact | Syft package artifacts | Imported libraries |
+| --- | --- | --- |
+| `curl` | `curl` version `8.21.0`, type `binary` | `libcurl.so.4`, `libssl.so.3`, `libcrypto.so.3`, `libz.so.1`, `libssh2.so.1`, `libidn2.so.0`, `libldap.so.2`, `liblber.so.2`, `libbrotlidec.so.1`, `libbrotlicommon.so.1`, `libzstd.so.1`, `libnghttp2.so.14`, `libpsl.so.5`, `libc.so.6` |
+| `libcurl.so.4.8.0` | none | `libssl.so.3`, `libcrypto.so.3`, `libz.so.1`, `libssh2.so.1`, `libidn2.so.0`, `libldap.so.2`, `liblber.so.2`, `libbrotlidec.so.1`, `libbrotlicommon.so.1`, `libzstd.so.1`, `libnghttp2.so.14`, `libpsl.so.5`, `libc.so.6` |
+
+I verified the imported libraries with `readelf -d`, and Syft's
+`importedLibraries` matched the ELF `NEEDED` entries exactly.
+
+Observation: curl is another case where Syft has a binary classifier and can
+identify a package-level artifact from a C executable. However, Syft reported
+version `8.21.0` while the built binary reports `8.21.0-DEV`, so the package
+name was correct but the version was not exact. Syft did not identify a package
+artifact for the standalone `libcurl.so.4.8.0` shared library.
+
+Additional observation: when the same curl executable was copied to the filename
+`curl-built`, Syft no longer reported the `curl` package artifact. This suggests
+the binary classifier may depend partly on the executable filename, not only the
+binary contents.
+
+## jq Linux Binary Result
+
+I tested the existing `jq-linux-amd64` binary.
+
+The binary reports:
+
+```text
+jq-1.8.1
+```
+
+The binary is a stripped, statically linked ELF executable. Because it is
+statically linked, `readelf -d` reported no dynamic `NEEDED` library entries.
+
+I tested two filenames with identical binary contents:
+
+- `data/binaries/jq-linux-amd64`
+- `data/binaries/jq-linux/jq`
+
+Both files have the same SHA-256:
+
+```text
+020468de7539ce70ef1bceaf7cde2e8c4f2ca6c3afb84642aabc5c97d9fc2a0d
+```
+
+Syft results:
+
+| Artifact | Syft package artifacts | Imported libraries |
+| --- | --- | --- |
+| `jq-linux-amd64` | none | none |
+| `jq` | `jq` version `1.8.1`, type `binary` | none |
+
+I verified the imported-library result with `readelf -d`. Syft reported no
+`importedLibraries`, which matched the absence of ELF `NEEDED` entries.
+
+Observation: this is a strong example of filename-sensitive package detection.
+Syft did not identify a package artifact when the binary was named
+`jq-linux-amd64`, but it identified the exact same binary as `jq` version
+`1.8.1` when the filename was changed to `jq`.
+
+## nginx Result
+
+I cloned and built nginx locally from source.
+
+Build commands used:
+
+```sh
+./auto/configure --builddir=build-local \
+  --prefix=/home/tylerg/sbom-research/nginx/build-install \
+  --sbin-path=/home/tylerg/sbom-research/nginx/build-install/sbin/nginx \
+  --with-http_ssl_module \
+  --with-http_v2_module \
+  --with-http_gzip_static_module \
+  --with-http_stub_status_module \
+  --with-threads \
+  --with-pcre-jit
+make -f build-local/Makefile -j$(nproc)
+```
+
+nginx commit tested: `bedf18f95`.
+
+The built executable reports:
+
+```text
+nginx version: nginx/1.31.2
+built by gcc 16.1.1 20260430 (GCC)
+built with OpenSSL 3.6.3 9 Jun 2026
+```
+
+I copied the useful test artifact into `data/binaries/nginx-local/`:
+
+- `nginx`
+
+Syft results:
+
+| Artifact | Syft package artifacts | Imported libraries |
+| --- | --- | --- |
+| `nginx` | `nginx` version `1.31.2`, type `binary` | `libcrypt.so.2`, `libpcre2-8.so.0`, `libssl.so.3`, `libcrypto.so.3`, `libz.so.1`, `libc.so.6` |
+
+I verified the imported libraries with `readelf -d`, and Syft's
+`importedLibraries` matched the ELF `NEEDED` entries exactly.
+
+Comparison script result:
+
+- package artifact precision: `1.0`
+- package artifact recall: `1.0`
+- package version accuracy: `1.0`
+- imported-library precision: `1.0`
+- imported-library recall: `1.0`
+
+Observation: nginx is another C binary where Syft has a specific binary
+classifier. Syft identified the package artifact, version, package URL, and CPE
+candidates from the executable, and the ELF imported-library evidence matched
+`readelf`.
+
 UP NEXT:
-jqlang/jq
-curl/curl
-nginx/nginx
 memcached/memcached
 openssl/openssl
 tukaani-project/xz

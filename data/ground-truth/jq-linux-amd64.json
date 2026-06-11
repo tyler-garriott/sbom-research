@@ -1,0 +1,10 @@
+{
+  "sample": "jq-linux-amd64",
+  "components": [
+    {
+      "name": "jq",
+      "version": "1.8.1"
+    }
+  ],
+  "imported_libraries": []
+}

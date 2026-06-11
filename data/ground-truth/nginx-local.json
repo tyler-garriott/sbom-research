@@ -1,0 +1,17 @@
+{
+  "sample": "nginx-local",
+  "components": [
+    {
+      "name": "nginx",
+      "version": "1.31.2"
+    }
+  ],
+  "imported_libraries": [
+    "libcrypt.so.2",
+    "libpcre2-8.so.0",
+    "libssl.so.3",
+    "libcrypto.so.3",
+    "libz.so.1",
+    "libc.so.6"
+  ]
+}
