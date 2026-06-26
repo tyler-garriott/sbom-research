@@ -353,7 +353,443 @@ classifier. Syft identified the package artifact, version, package URL, and CPE
 candidates from the executable, and the ELF imported-library evidence matched
 `readelf`.
 
-UP NEXT:
-memcached/memcached
-openssl/openssl
-tukaani-project/xz
+## memcached Result
+
+I tested the locally cloned and built memcached executable.
+
+memcached commit tested: `f1674f023`.
+
+The built executable reports:
+
+```text
+memcached 1.6.42
+```
+
+The artifact is an ELF executable:
+
+- ELF 64-bit LSB PIE executable
+- dynamically linked
+- contains debug info
+- not stripped
+
+I copied two test artifacts into `data/binaries/memcached-local/`:
+
+- `memcached`
+- `memcached-built`
+
+Both files have the same SHA-256:
+
+```text
+9b05cffb0b47312f2525207a07d8321187618ddaafd56bc01fcd7b43fcdb2e19
+```
+
+Syft results:
+
+| Artifact | Syft package artifacts | Imported libraries |
+| --- | --- | --- |
+| `memcached` | `memcached` version `1.6.42`, type `binary` | `libevent-2.1.so.7`, `libc.so.6` |
+| `memcached-built` | none | `libevent-2.1.so.7`, `libc.so.6` |
+
+For the normal `memcached` filename, Syft also reported:
+
+- package URL: `pkg:generic/memcached@1.6.42`
+- CPE candidate: `cpe:2.3:a:memcached:memcached:1.6.42:*:*:*:*:*:*:*`
+
+I verified the imported libraries with `readelf -d`, and Syft's
+`importedLibraries` matched the ELF `NEEDED` entries exactly for both files.
+
+Comparison script results:
+
+| Sample | Package precision | Package recall | Version accuracy | Imported-library precision | Imported-library recall |
+| --- | --- | --- | --- | --- | --- |
+| `memcached-local` | `1.0` | `1.0` | `1.0` | `1.0` | `1.0` |
+| `memcached-built` | null | `0.0` | null | `1.0` | `1.0` |
+
+Observation: memcached is another C binary where Syft has a specific binary
+classifier. With the expected filename, Syft identified the package artifact,
+version, package URL, and CPE candidate. However, the identical binary copied to
+the filename `memcached-built` did not produce a package artifact. This is
+another strong filename-sensitivity result. The ELF imported-library evidence
+was still correct for both filenames.
+
+## OpenSSL Result
+
+I cloned and built OpenSSL locally from source.
+
+Build commands used:
+
+```sh
+./Configure \
+  --prefix=/home/tylerg/sbom-research/openssl/build-install \
+  --openssldir=/home/tylerg/sbom-research/openssl/build-install/ssl \
+  no-tests
+make -j$(nproc) build_sw
+```
+
+Important build note: building the direct `apps/openssl` target first failed
+because generated local headers such as `include/openssl/bio.h`,
+`include/openssl/ssl.h`, and `include/openssl/x509.h` did not exist yet. The
+compiler then picked up system OpenSSL headers from `/usr/include/openssl`,
+which mixed incompatible headers with this checkout. The broader `build_sw`
+target generated the needed local headers and built the executable correctly.
+
+OpenSSL commit tested: `1f1ce7cad`.
+
+The built executable reports:
+
+```text
+OpenSSL 4.1.0-dev  (Library: OpenSSL 4.1.0-dev )
+```
+
+The artifact is an ELF executable:
+
+- ELF 64-bit LSB PIE executable
+- dynamically linked
+- not stripped
+
+I copied two test artifacts into `data/binaries/openssl-local/`:
+
+- `openssl`
+- `openssl-built`
+
+Both files have the same SHA-256:
+
+```text
+dd4e930437a5ada5d6ca37823a6cd703c90bb2418828f82334f6a1c369e7fed5
+```
+
+Syft results:
+
+| Artifact | Syft package artifacts | Imported libraries |
+| --- | --- | --- |
+| `openssl` | `openssl` version `4.1.0`, type `binary` | `libssl.so.4`, `libcrypto.so.4`, `libc.so.6` |
+| `openssl-built` | none | `libssl.so.4`, `libcrypto.so.4`, `libc.so.6` |
+
+For the normal `openssl` filename, Syft also reported:
+
+- package URL: `pkg:generic/openssl@4.1.0`
+- CPE candidate: `cpe:2.3:a:openssl:openssl:4.1.0:*:*:*:*:*:*:*`
+
+I verified the imported libraries with `readelf -d`, and Syft's
+`importedLibraries` matched the ELF `NEEDED` entries exactly for both files.
+
+Comparison script results:
+
+| Sample | Package precision | Package recall | Version accuracy | Imported-library precision | Imported-library recall |
+| --- | --- | --- | --- | --- | --- |
+| `openssl-local` | `1.0` | `1.0` | `0.0` | `1.0` | `1.0` |
+| `openssl-built` | null | `0.0` | null | `1.0` | `1.0` |
+
+Observation: OpenSSL is another C binary where Syft has a specific binary
+classifier. With the expected filename, Syft identified the package artifact,
+package URL, and CPE candidate. However, Syft reported version `4.1.0` while the
+built binary reports `4.1.0-dev`, so the package name was correct but the
+version was not exact. The identical binary copied to the filename
+`openssl-built` did not produce a package artifact. The ELF imported-library
+evidence was still correct for both filenames.
+
+## xz Result
+
+I cloned and built xz locally from source using CMake.
+
+Build commands used:
+
+```sh
+cmake -S xz -B xz/build-cmake -DCMAKE_BUILD_TYPE=Release
+cmake --build xz/build-cmake --target xz --parallel
+```
+
+xz commit tested: `e95cd90da`.
+
+The built executable reports:
+
+```text
+xz (XZ Utils) 5.8.3
+liblzma 5.8.3
+```
+
+The artifact is an ELF executable:
+
+- ELF 64-bit LSB PIE executable
+- dynamically linked
+- not stripped
+
+The CMake build produced `xz/build-cmake/liblzma.a`, and the `xz` executable
+linked the xz/liblzma code into the executable rather than importing a dynamic
+`liblzma.so` library. Because of this, the ELF dynamic imports only showed
+`libc.so.6`.
+
+I copied two test artifacts into `data/binaries/xz-local/`:
+
+- `xz`
+- `xz-built`
+
+Both files have the same SHA-256:
+
+```text
+edfb2eeae33a745e6dcdce3a818ae2604a3374077fc530271ae2d32316afe605
+```
+
+Syft results:
+
+| Artifact | Syft package artifacts | Imported libraries |
+| --- | --- | --- |
+| `xz` | `xz` version `5.8.3`, type `binary` | `libc.so.6` |
+| `xz-built` | none | `libc.so.6` |
+
+For the normal `xz` filename, Syft also reported:
+
+- package URL: `pkg:generic/xz@5.8.3`
+- CPE candidate: `cpe:2.3:a:tukaani:xz:5.8.3:*:*:*:*:*:*:*`
+
+I verified the imported libraries with `readelf -d`, and Syft's
+`importedLibraries` matched the ELF `NEEDED` entries exactly for both files.
+
+Comparison script results:
+
+| Sample | Package precision | Package recall | Version accuracy | Imported-library precision | Imported-library recall |
+| --- | --- | --- | --- | --- | --- |
+| `xz-local` | `1.0` | `1.0` | `1.0` | `1.0` | `1.0` |
+| `xz-built` | null | `0.0` | null | `1.0` | `1.0` |
+
+Observation: xz is another C binary where Syft has a specific binary
+classifier. With the expected filename, Syft identified the package artifact,
+version, package URL, and CPE candidate. However, the identical binary copied to
+the filename `xz-built` did not produce a package artifact. The ELF
+imported-library evidence was still correct for both filenames.
+
+## Controlled Syft Tests
+
+I ran a small controlled follow-up to test whether the filename result depends
+on basename, parent path, debug symbols, or dynamic linking behavior. The full
+short write-up is in `comparison.md`.
+
+Tool version:
+
+```text
+syft 1.44.0
+```
+
+### OpenSSL basename and parent-path controls
+
+I copied the same OpenSSL binary into four paths:
+
+| Test file | SHA-256 | Syft package artifacts | Imported libraries |
+| --- | --- | --- | --- |
+| `data/binaries/controlled-paths/basename/openssl` | `dd4e930437a5ada5d6ca37823a6cd703c90bb2418828f82334f6a1c369e7fed5` | `openssl` version `4.1.0`, type `binary` | `libssl.so.4`, `libcrypto.so.4`, `libc.so.6` |
+| `data/binaries/controlled-paths/basename/openssl-built` | same | none | `libssl.so.4`, `libcrypto.so.4`, `libc.so.6` |
+| `data/binaries/controlled-paths/random-parent/openssl` | same | `openssl` version `4.1.0`, type `binary` | `libssl.so.4`, `libcrypto.so.4`, `libc.so.6` |
+| `data/binaries/controlled-paths/openssl-parent/openssl-built` | same | none | `libssl.so.4`, `libcrypto.so.4`, `libc.so.6` |
+
+Observation: the basename `openssl` was enough for Syft to identify the package
+artifact, even under a random parent directory. Renaming the same bytes to
+`openssl-built` suppressed the package artifact, even when the parent directory
+contained `openssl` in its name. This points more strongly to basename-sensitive
+binary classification than to general path context.
+
+### Stripped OpenSSL controls
+
+I stripped two OpenSSL copies with `strip --strip-all`:
+
+| Test file | SHA-256 | Syft package artifacts | Imported libraries |
+| --- | --- | --- | --- |
+| `data/binaries/controlled-strip/openssl` | `d3313b26c828bd4e8c5c696db2d414126093bcaacdcd7fcc92684aab61321413` | `openssl` version `4.1.0`, type `binary` | `libssl.so.4`, `libcrypto.so.4`, `libc.so.6` |
+| `data/binaries/controlled-strip/openssl-built` | same | none | `libssl.so.4`, `libcrypto.so.4`, `libc.so.6` |
+
+Observation: stripping did not stop Syft from identifying OpenSSL when the
+basename was `openssl`. The stripped copy named `openssl-built` still produced
+no package artifact. For this binary, the package artifact result is not simply
+dependent on debug symbols.
+
+### Small linking controls
+
+I also built small dynamic and static test binaries:
+
+| Test file | Link style | Syft package artifacts | Imported libraries |
+| --- | --- | --- | --- |
+| `data/binaries/controlled-linking/zlib-test-dynamic` | dynamic | none | `libz.so.1`, `libc.so.6` |
+| `data/binaries/controlled-linking/hello-dynamic` | dynamic | none | `libc.so.6` |
+| `data/binaries/controlled-linking/hello-static` | static | none | none |
+
+The static `zlib-test` build failed because the static `libz.a` library is not
+installed in this environment:
+
+```text
+/usr/bin/ld: cannot find -lz: No such file or directory
+```
+
+Observation: Syft extracted dynamic ELF `NEEDED` entries as imported libraries.
+The statically linked `hello-static` binary had no dynamic section, and Syft
+reported no imported libraries. The dynamic zlib sample imported `libz.so.1`,
+but Syft did not turn that imported library into a package artifact named
+`zlib`.
+
+## FFmpeg System Binary Result
+
+I tested the system `ffmpeg` executable as a larger real-world C/C++ case study.
+
+The source binary was:
+
+```text
+/usr/bin/ffmpeg
+```
+
+The copied artifacts are:
+
+- `data/binaries/ffmpeg-system/ffmpeg`
+- `data/binaries/ffmpeg-system/ffmpeg-renamed`
+
+Both files have the same SHA-256:
+
+```text
+bac0566dbe413e9af0a1bfd700abd941f2537545b0d76e0c7ce120dd29272407
+```
+
+The binary is:
+
+- ELF 64-bit LSB PIE executable
+- dynamically linked
+- stripped
+
+The copied executable reports:
+
+```text
+ffmpeg version n8.1.2
+built with gcc 16.1.1 (GCC) 20260430
+```
+
+The `ffmpeg -version` output also reports a long build configuration with many
+enabled libraries, including `--enable-libx264`, `--enable-libx265`,
+`--enable-libvpx`, `--enable-libwebp`, `--enable-libxml2`, `--enable-libssh`,
+and many others. This is build configuration evidence, not the same thing as ELF
+dynamic import evidence.
+
+`readelf -d` showed the same ELF `NEEDED` entries for both copied files:
+
+```text
+libavdevice.so.62
+libavfilter.so.11
+libavformat.so.62
+libavcodec.so.62
+libswresample.so.6
+libswscale.so.9
+libavutil.so.60
+libm.so.6
+libz.so.1
+libc.so.6
+```
+
+Syft results:
+
+| Artifact | Syft package artifacts | Imported libraries |
+| --- | --- | --- |
+| `ffmpeg` | none | `libavdevice.so.62`, `libavfilter.so.11`, `libavformat.so.62`, `libavcodec.so.62`, `libswresample.so.6`, `libswscale.so.9`, `libavutil.so.60`, `libm.so.6`, `libz.so.1`, `libc.so.6` |
+| `ffmpeg-renamed` | none | `libavdevice.so.62`, `libavfilter.so.11`, `libavformat.so.62`, `libavcodec.so.62`, `libswresample.so.6`, `libswscale.so.9`, `libavutil.so.60`, `libm.so.6`, `libz.so.1`, `libc.so.6` |
+
+Comparison script results:
+
+| Sample | Package precision | Package recall | Version accuracy | Imported-library precision | Imported-library recall |
+| --- | --- | --- | --- | --- | --- |
+| `ffmpeg-system` | null | `0.0` | null | `1.0` | `1.0` |
+| `ffmpeg-renamed` | null | `0.0` | null | `1.0` | `1.0` |
+
+Observation: this larger real-world binary reinforces the separation between
+three evidence types. The executable's own version output describes many
+enabled build features, `readelf` and Syft both show the directly imported
+shared libraries, but Syft did not report a package artifact for the top-level
+`ffmpeg` executable. The renamed copy produced the same result because there was
+no package artifact for the expected filename either.
+
+## Syft Filename-Sensitivity Summary
+
+The strongest pattern so far is that Syft's package-level binary classifiers
+are sensitive to the filename or path basename. In several tests, two files had
+identical bytes and identical ELF imported libraries, but Syft reported a
+package artifact for one filename and no package artifact for the other.
+
+Byte-identical filename tests:
+
+| Component | Filenames tested | Expected-name result | Alternate-name result | Version exact? | Imported libraries |
+| --- | --- | --- | --- | --- | --- |
+| `curl` | `curl`, `curl-built` | found `curl` | none | no: `8.21.0` vs `8.21.0-DEV` | exact |
+| `jq` | `jq`, `jq-linux-amd64` | found `jq` | none | yes | exact, no imports |
+| `memcached` | `memcached`, `memcached-built` | found `memcached` | none | yes | exact |
+| `openssl` | `openssl`, `openssl-built` | found `openssl` | none | no: `4.1.0` vs `4.1.0-dev` | exact |
+| `xz` | `xz`, `xz-built` | found `xz` | none | yes | exact |
+
+The zstd results point in the same direction, although they are not a
+byte-identical rename test. Syft found a package artifact for the main `zstd`
+executable but did not identify related zstd build artifacts such as `unzstd`,
+`zstdcat`, `zstdmt`, `zstd-frugal`, `libzstd.so.1.6.0`, or `libzstd.a`.
+
+Current interpretation: the evidence so far suggests Syft is not doing general
+C/C++ binary composition analysis that recognizes a component from arbitrary
+compiled code. For these cases, package artifact detection appears to depend on
+Syft having a specific binary classifier and on the scanned file matching the
+classifier's expected filename or path pattern. The same binary contents under a
+different filename can lose the package-level SBOM component.
+
+This does not affect Syft's ELF imported-library extraction. Across these
+filename tests, Syft's `files[].executable.importedLibraries` output stayed
+consistent and matched the ELF `NEEDED` entries from `readelf -d`.
+
+## Results so far
+Syft seems to be able to identify some known C/C++ binaries as package
+artifacts, but this appears to depend heavily on specific binary classifiers,
+filename/path basename expectations, and version strings. It reliably extracts
+ELF imported libraries, but that is dependency evidence, not full binary
+composition analysis.
+
+The larger `ffmpeg` case study fits this interpretation. Syft did not identify
+the top-level `ffmpeg` package artifact at all, but it did exactly extract the
+direct ELF imports. The program's build configuration listed many more enabled
+libraries than the direct ELF `NEEDED` list, which is another reminder that
+different evidence sources answer different questions.
+
+## Up Next
+
+The experimental evidence is probably sufficient. The next work should focus on
+turning the results into a clear, reproducible write-up rather than collecting
+more random binaries.
+
+Tomorrow's checklist:
+
+1. Freeze the main claim:
+
+   ```text
+   Syft can identify some known C/C++ binaries as package artifacts, but this is
+   classifier and filename dependent. Syft reliably extracts ELF imported
+   libraries, but imported libraries are dependency evidence, not full SBOM
+   component detection.
+   ```
+
+2. Create a clean `RESULTS.md` or expand `README.md` with:
+
+   - research question
+   - method
+   - tested binaries
+   - main result table
+   - controlled filename/path tests
+   - FFmpeg case study
+   - conclusion
+   - limitations
+
+3. Add a small summary script, for example:
+
+   ```sh
+   python3 scripts/summarize_syft.py data/syft-output/ffmpeg-system/ffmpeg.json
+   ```
+
+   The script should print:
+
+   - package artifacts
+   - imported libraries
+   - artifact count
+   - imported-library count
+
+4. Optional final contrast test:
+
+   Compare scanning a single binary file with scanning a package-managed
+   filesystem or root directory. This could show that Syft may detect packages
+   from package metadata during a filesystem scan, which is different from
+   identifying components from one compiled binary.

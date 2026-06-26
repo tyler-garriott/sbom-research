@@ -1,0 +1,21 @@
+{
+  "sample": "ffmpeg-renamed",
+  "components": [
+    {
+      "name": "ffmpeg",
+      "version": "n8.1.2"
+    }
+  ],
+  "imported_libraries": [
+    "libavdevice.so.62",
+    "libavfilter.so.11",
+    "libavformat.so.62",
+    "libavcodec.so.62",
+    "libswresample.so.6",
+    "libswscale.so.9",
+    "libavutil.so.60",
+    "libm.so.6",
+    "libz.so.1",
+    "libc.so.6"
+  ]
+}

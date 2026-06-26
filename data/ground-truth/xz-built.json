@@ -1,0 +1,12 @@
+{
+  "sample": "xz-built",
+  "components": [
+    {
+      "name": "xz",
+      "version": "5.8.3"
+    }
+  ],
+  "imported_libraries": [
+    "libc.so.6"
+  ]
+}

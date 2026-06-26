@@ -1,0 +1,14 @@
+{
+  "sample": "openssl-built",
+  "components": [
+    {
+      "name": "openssl",
+      "version": "4.1.0-dev"
+    }
+  ],
+  "imported_libraries": [
+    "libssl.so.4",
+    "libcrypto.so.4",
+    "libc.so.6"
+  ]
+}

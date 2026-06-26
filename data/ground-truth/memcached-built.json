@@ -1,0 +1,13 @@
+{
+  "sample": "memcached-built",
+  "components": [
+    {
+      "name": "memcached",
+      "version": "1.6.42"
+    }
+  ],
+  "imported_libraries": [
+    "libevent-2.1.so.7",
+    "libc.so.6"
+  ]
+}
