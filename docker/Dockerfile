@@ -2,7 +2,6 @@ FROM ubuntu:26.04
 
 ARG DEBIAN_FRONTEND=noninteractive
 ARG SYFT_VERSION=1.44.0
-ARG CODEX_VERSION=0.125.0
 
 RUN apt-get update && apt-get install -y --no-install-recommends \
     autoconf \
@@ -31,8 +30,6 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
     libzstd-dev \
     make \
     ninja-build \
-    nodejs \
-    npm \
     perl \
     pkg-config \
     postgresql-server-dev-all \
@@ -45,8 +42,6 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
 
 RUN curl -sSfL https://raw.githubusercontent.com/anchore/syft/main/install.sh \
     | sh -s -- -b /usr/local/bin "v${SYFT_VERSION}"
-
-RUN npm install -g "@openai/codex@${CODEX_VERSION}"
 
 WORKDIR /work
 

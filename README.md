@@ -99,7 +99,7 @@ match.
 
 Use Docker when working from a MacBook or when you want reproducible Linux
 results. The image installs common C/C++ build tools, development headers,
-`readelf`, `jq`, Syft `1.44.0`, and Codex CLI `0.125.0`.
+`readelf`, `jq`, and Syft `1.44.0`.
 
 Build the image:
 
@@ -134,25 +134,6 @@ syft data/binaries/zlib-test -o syft-json=data/syft-output/zlib-test.json
 readelf -d data/binaries/zlib-test
 ```
 
-To use Codex inside the container, authenticate inside the container:
-
-```sh
-codex login
-codex
-```
-
-Do not copy Codex credentials into the Docker image. If you want to reuse your
-host Codex login instead, mount only your local auth file when starting the
-container:
-
-```sh
-docker run --rm -it \
-  -v "$PWD":/work \
-  -v "$HOME/.codex/auth.json":/root/.codex/auth.json:ro \
-  -w /work \
-  sbom-research
-```
-
 You can also use Docker Compose:
 
 ```sh
@@ -161,8 +142,7 @@ docker compose -f docker/compose.yaml run --rm research
 
 ## Dev Container
 
-This repo also includes a Dev Container config for editors that support it,
-including Zed.
+This repo also includes a Dev Container config for editors that support it.
 
 Open the project in the editor and choose the option to reopen the project in a
 container. The config is in:

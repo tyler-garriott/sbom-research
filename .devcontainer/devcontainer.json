@@ -6,7 +6,7 @@
   },
   "workspaceFolder": "/work",
   "workspaceMount": "source=${localWorkspaceFolder},target=/work,type=bind",
-  "postCreateCommand": "syft version && codex --version && gcc --version && jq --version",
+  "postCreateCommand": "syft version && gcc --version && jq --version",
   "customizations": {
     "zed": {
       "extensions": []
