@@ -24,41 +24,9 @@ This project compares:
 - `data/syft-output/`: place to save Syft output
 - `scripts/compare_sbom.py`: compares expected package artifacts and ELF imports with Syft output
 - `docker/`: reproducible Linux environment for building and scanning binaries
+- `scripts/`: utility scripts for building samples and comparing Syft output
+- `docs/`: notes and documentation
 
-## First Experiment
-
-1. Pick a small binary or package.
-2. Write the expected components in a ground-truth file:
-
-   ```json
-   {
-     "sample": "example",
-     "components": [
-       {
-         "name": "openssl",
-         "version": "3.0.13"
-       }
-     ],
-     "imported_libraries": [
-       "libcrypto.so.3",
-       "libc.so.6"
-     ]
-   }
-   ```
-
-3. Run Syft:
-
-   ```sh
-   syft ./path/to/binary -o syft-json > data/syft-output/example.syft.json
-   ```
-
-4. Compare the expected package artifacts and imported libraries with Syft's output:
-
-   ```sh
-   python3 scripts/compare_sbom.py \
-     data/ground-truth/example.json \
-     data/syft-output/example.syft.json
-   ```
 
 ## Ground Truth Fields
 
@@ -82,24 +50,12 @@ The comparison script reports two separate measurements:
 - `package_artifacts`: whether Syft emitted expected SBOM package/component records under `artifacts`
 - `imported_libraries`: whether Syft extracted expected ELF `NEEDED` entries under `files[].executable.importedLibraries`
 
-For each measurement:
-
-- true positive: Syft found an item that should be there
-- false positive: Syft reported an item that should not be there
-- false negative: Syft missed an item that should be there
-- precision: how many reported items were correct
-- recall: how many expected items were found
-
-For package artifacts, precision and recall are based on component names.
-`version_accuracy` is reported separately when the ground truth includes
-expected versions. Package `exact_match` is false if a required version does not
-match.
-
 ## Docker Environment
 
 Use Docker when working from a MacBook or when you want reproducible Linux
 results. The image installs common C/C++ build tools, development headers,
-`readelf`, `jq`, and Syft `1.44.0`.
+`readelf`, `jq`, and the latest Syft release available when the image is built.
+Record `syft version` with any new experiment results.
 
 Build the image:
 
@@ -113,7 +69,7 @@ Run it from the repo root:
 docker run --rm -it -v "$PWD":/work -w /work sbom-research
 ```
 
-On an Apple Silicon Mac, use `linux/amd64` if you want results comparable with
+On an Apple Silicon Mac, use `linux/amd64` for results comparable with
 the current x86-64 Linux results:
 
 ```sh
@@ -121,23 +77,18 @@ docker build --platform linux/amd64 -t sbom-research docker
 docker run --platform linux/amd64 --rm -it -v "$PWD":/work -w /work sbom-research
 ```
 
-Inside the container, build the starter samples:
-
-```sh
-bash scripts/build_samples.sh
-```
-
-Then scan a binary:
-
-```sh
-syft data/binaries/zlib-test -o syft-json=data/syft-output/zlib-test.json
-readelf -d data/binaries/zlib-test
-```
-
 You can also use Docker Compose:
 
 ```sh
 docker compose -f docker/compose.yaml run --rm research
+```
+
+Inside the container, a minimal scan workflow is:
+
+```sh
+bash scripts/build_samples.sh
+syft data/binaries/zlib-test -o syft-json=data/syft-output/zlib-test.json
+readelf -d data/binaries/zlib-test
 ```
 
 ## Dev Container
@@ -153,3 +104,15 @@ container. The config is in:
 
 The Dev Container uses the same Dockerfile in `docker/Dockerfile` and mounts
 the repo at `/work` inside the container.
+
+## Next Phase
+
+The Phase 2 plan is in:
+
+```text
+docs/phase_2.md
+```
+
+It focuses on investigating Syft's binary classifiers, reproducing the strongest
+rename tests, comparing Syft versions, and separating package artifacts, ELF
+imports, and string evidence.

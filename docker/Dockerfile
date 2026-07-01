@@ -1,7 +1,6 @@
 FROM ubuntu:26.04
 
 ARG DEBIAN_FRONTEND=noninteractive
-ARG SYFT_VERSION=1.44.0
 
 RUN apt-get update && apt-get install -y --no-install-recommends \
     autoconf \
@@ -41,7 +40,7 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
     && rm -rf /var/lib/apt/lists/*
 
 RUN curl -sSfL https://raw.githubusercontent.com/anchore/syft/main/install.sh \
-    | sh -s -- -b /usr/local/bin "v${SYFT_VERSION}"
+    | sh -s -- -b /usr/local/bin
 
 WORKDIR /work
 
